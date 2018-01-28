@@ -79,10 +79,7 @@ class compilationEngine:
         elif self.tokens.current_token[0]=='return':
             self.compileReturn()
 
-        elif self.tokens.current_token[0]=='if':
-            self.compileIf()
-
-        elif self.tokens.current_token[0]=='else':
+        elif self.tokens.current_token[0] in ['if','else']:
             self.compileIf()
 
         elif self.tokens.current_token[0] in ['static','field']:
@@ -94,53 +91,34 @@ class compilationEngine:
         if self.tokens.current_token[0]=='class':
             self.open_new_root_tag('class')
             self.write_terminal_elm_advance_compile(self.compileClass)
-            #self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            #self.tokens.advance()
-            #self.compileClass()
 
         elif self.tokens.current_token[0]=='':
             return
 
-        #handle classvarDec opening
         elif self.tokens.current_token[0] in ['static','field']:
             self.compileClassVarDec()
 
 
-        #tag identifier
-        elif self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileClass()
+        #tag identifier or symbol or keyword
+        elif (self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword) or (self.tokens.current_token[0] in self.symbol) or(self.tokens.current_token[0] in self.keyword):
+            self.write_terminal_elm_advance_compile(self.compileClass)
 
-        #tag symbol
-        elif self.tokens.current_token[0] in self.symbol :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileClass()
-
-        #tag statements_key
         elif self.tokens.current_token[0] in self.statements_key:
             self.check_for_statements()
 
         #tag keyword other than statements_key
-        elif self.tokens.current_token[0] in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileClass()
+        #elif self.tokens.current_token[0] in self.keyword:
+        #    self.write_terminal_elm_advance_compile(self.compileClass)
 
 
     def compileSubroutine(self):
-        #
         if self.tokens.previous_token(2)[0]=='}' and (self.bracket[-1] in ['subroutineBody','subroutineDec']):
             self.close_tag()
             self.compileSubroutine()
 
-
         elif self.tokens.current_token[0] in ['method','function','subroutine','constructor']:
             self.open_new_root_tag('subroutineDec')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileSubroutine()
+            self.write_terminal_elm_advance_compile(self.compileSubroutine)
 
         elif self.tokens.current_token[0]=='':
             return
@@ -153,15 +131,11 @@ class compilationEngine:
 
         elif self.tokens.current_token[0]==')' :
             self.close_tag()
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileSubroutine()
+            self.write_terminal_elm_advance_compile(self.compileSubroutine)
 
         elif self.tokens.current_token[0]=='{' and self.tokens.next_token()[0]=='var':
             self.open_new_root_tag('subroutineBody')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileVarDec()
+            self.write_terminal_elm_advance_compile(self.compileVarDec)
 
         elif self.tokens.current_token[0]=='{' :
             self.open_new_root_tag('subroutineBody')
@@ -171,20 +145,14 @@ class compilationEngine:
             self.compileSubroutine()
 
         elif self.tokens.current_token[0]=='}' :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.close_tag()
-            self.compileSubroutine()
+            self.write_terminal_elm_advance_compile(self.compileSubroutine)
 
            #tag identifier
         elif self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileSubroutine()
+            self.write_terminal_elm_advance_compile(self.compileSubroutine)
 
         elif self.tokens.current_token[0] in self.symbol :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileSubroutine()
+            self.write_terminal_elm_advance_compile(self.compileSubroutine)
 
         #tag statements_key
         elif self.tokens.current_token[0] in self.statements_key :
@@ -192,26 +160,20 @@ class compilationEngine:
 
         #tag remaing keyword not in statements_key
         elif self.tokens.current_token[0] in self.keyword :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileSubroutine()
+            self.write_terminal_elm_advance_compile(self.compileSubroutine)
 
     def compileVarDec(self):
 
         if self.tokens.current_token[0]=='var':
             self.open_new_root_tag('varDec')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileVarDec()
+            self.write_terminal_elm_advance_compile(self.compileVarDec)
 
         elif self.tokens.current_token[0]=='':
             return
 
 
         elif self.tokens.current_token[0]==',':
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileVarDec()
+            self.write_terminal_elm_advance_compile(self.compileVarDec)
 
         elif self.tokens.current_token[0]==';':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
@@ -221,9 +183,7 @@ class compilationEngine:
 
            #tag identifier
         elif self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileVarDec()
+            self.write_terminal_elm_advance_compile(self.compileVarDec)
 
         #tag token in statements_key
         elif self.tokens.current_token[0] in self.statements_key:
@@ -231,9 +191,7 @@ class compilationEngine:
 
         #tag keyword token not in statements_key
         elif self.tokens.current_token[0] in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileVarDec()
+            self.write_terminal_elm_advance_compile(self.compileVarDec)
 
 
 
@@ -243,21 +201,15 @@ class compilationEngine:
             if 'statements' not in self.bracket:
                 self.open_new_root_tag('statements')
                 self.open_new_root_tag('letStatement')
-                self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-                self.tokens.advance()
-                self.compileLet()
+                self.write_terminal_elm_advance_compile(self.compileLet)
 
             else:
                 self.open_new_root_tag('letStatement')
-                self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-                self.tokens.advance()
-                self.compileLet()
+                self.write_terminal_elm_advance_compile(self.compileLet)
 
            #tag identifier
         elif self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileLet()
+            self.write_terminal_elm_advance_compile(self.compileLet)
 
         elif self.tokens.current_token[0]=='=':
             self.compileExpression()
@@ -299,9 +251,7 @@ class compilationEngine:
 
         elif self.tokens.current_token[0]==']':
             self.close_tag()
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileExpression()
+            self.write_terminal_elm_advance_compile(self.compileExpression)
 
         elif self.tokens.current_token[0]==')' and self.bracket[-1]=='term':
             self.compileTerm()
@@ -319,19 +269,13 @@ class compilationEngine:
             elif self.bracket[-1]=='term' and self.tokens.next_token()[0]=='&':
                 self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
                 self.close_tag()
-                #replace & by &amp;
                 self.tokens.advance()
-                self.tokens.current_token=('&amp;','symbol')
-                self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-                self.tokens.advance()
-                self.compileTerm()
+                self.tokens.current_token=('&amp;','symbol')  #replace & by &amp;
+                self.write_terminal_elm_advance_compile(self.compileTerm)
 
             elif self.bracket[-1]=='term':
-                self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-                self.tokens.advance()
-                self.compileTerm()
+                self.write_terminal_elm_advance_compile(self.compileTerm)
 
-            # if in expressionList go to compileExpressionexpressionList
             else:
                 self.compileExpressionList()
 
@@ -353,7 +297,6 @@ class compilationEngine:
         elif self.tokens.current_token[0]=='}':
             self.close_tag()
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-
             condition2= self.bracket[-1]=='whileStatement' #condition for whileStatement closing
             if (self.bracket[-1]=='ifStatement' and self.tokens.next_token()[0]!='else') or condition2:
                 self.close_tag()
@@ -458,20 +401,14 @@ class compilationEngine:
 
            #tag identifier
         elif self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileTerm()
+            self.write_terminal_elm_advance_compile(self.compileTerm)
 
         #handle symbol
         elif self.tokens.current_token[0] in self.symbol :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileTerm()
+            self.write_terminal_elm_advance_compile(self.compileTerm)
 
         elif self.tokens.current_token[0] in self.keyword :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileTerm()
+            self.write_terminal_elm_advance_compile(self.compileTerm)
 
         elif self.tokens.current_token[0]=='':
             return
@@ -507,18 +444,14 @@ class compilationEngine:
     def compileWhile(self):
         if self.tokens.current_token[0]=='while':
             self.open_new_root_tag('whileStatement')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileWhile()
+            self.write_terminal_elm_advance_compile(self.compileWhile)
 
         elif self.tokens.current_token[0]=='(':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
             self.compileExpression()
 
         elif self.tokens.current_token[0]==')':
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileWhile()
+            self.write_terminal_elm_advance_compile(self.compileWhile)
 
         elif self.tokens.current_token[0]=='{':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
@@ -530,14 +463,10 @@ class compilationEngine:
         #
         if self.tokens.current_token[0]=='do':
             self.open_new_root_tag('doStatement')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileDo()
+            self.write_terminal_elm_advance_compile(self.compileDo)
 
         elif self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileDo()
+            self.write_terminal_elm_advance_compile(self.compileDo)
 
         elif self.tokens.current_token[0]=='(':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
@@ -561,9 +490,7 @@ class compilationEngine:
 
         #handle symbol
         elif self.tokens.current_token[0] in self.symbol :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileDo()
+            self.write_terminal_elm_advance_compile(self.compileDo)
 
         else:
             self.check_for_statements()
@@ -572,15 +499,11 @@ class compilationEngine:
         if self.tokens.current_token[0]=='return' and self.bracket[-1]=='ifStatement':
             self.close_tag()
             self.open_new_root_tag('returnStatement')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileReturn()
+            self.write_terminal_elm_advance_compile(self.compileReturn)
 
         elif self.tokens.current_token[0]=='return':
             self.open_new_root_tag('returnStatement')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileReturn()
+            self.write_terminal_elm_advance_compile(self.compileReturn)
 
         elif self.tokens.current_token[0]==';':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
@@ -610,15 +533,11 @@ class compilationEngine:
     def compileClassVarDec(self):
         if self.tokens.current_token[0] in ['static','field']:
             self.open_new_root_tag('classVarDec')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileClassVarDec()
+            self.write_terminal_elm_advance_compile(self.compileClassVarDec)
 
         #tag identifier
         elif self.tokens.current_token[0] not in self.symbol and self.tokens.current_token[0] not in self.keyword:
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileClassVarDec()
+            self.write_terminal_elm_advance_compile(self.compileClassVarDec)
 
         elif self.tokens.current_token[0]==';':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
@@ -627,34 +546,26 @@ class compilationEngine:
             self.check_for_statements()
 
         elif self.tokens.current_token[0] in self.keyword  or self.tokens.current_token[0] in self.symbol :
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileClassVarDec()
+            self.write_terminal_elm_advance_compile(self.compileClassVarDec)
 
 
     def compileIf(self):
         #
         if self.tokens.current_token[0]=='if' and self.bracket[-1]=='statements':
             self.open_new_root_tag('ifStatement')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileIf()
+            self.write_terminal_elm_advance_compile(self.compileIf)
 
         elif self.tokens.current_token[0]=='if':
             self.open_new_root_tag('statements')
             self.open_new_root_tag('ifStatement')
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileIf()
+            self.write_terminal_elm_advance_compile(self.compileIf)
 
         elif self.tokens.current_token[0]=='(':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
             self.compileExpression()
 
         elif self.tokens.current_token[0]==')':
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileIf()
+            self.write_terminal_elm_advance_compile(self.compileIf)
 
         elif self.tokens.current_token[0]=='{':
             self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
@@ -663,9 +574,7 @@ class compilationEngine:
             self.check_for_statements()
 
         elif self.tokens.current_token[0]=='else':
-            self.output_file.write(self.get_dynamic_space()+self.tag_body(self.tokens.current_token))
-            self.tokens.advance()
-            self.compileIf()
+            self.write_terminal_elm_advance_compile(self.compileIf)
 
     def compileStatements(self):
         pass
